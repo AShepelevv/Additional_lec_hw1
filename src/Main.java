@@ -21,5 +21,13 @@ public class Main {
         t.start();
         t.join();
         System.out.println((nanoTime() - startTime) / 1e9);
+        boolean ok = true;
+        for (int i = 1; i< SIZE; ++i) {
+            if (arr[i - 1] > arr[i]) {
+                ok = false;
+                break;
+            }
+        }
+        System.out.println(ok ? "CORRECT" : "INCORRECT");
     }
 }
