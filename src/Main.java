@@ -16,7 +16,7 @@ public class Main {
             arr[i] = parseInt(reader.readLine());
         }
 
-        SortThread t = new SortThread(arr, 0);
+        SortThread t = new SortThread(arr, 4);
         var startTime = nanoTime();
         t.start();
         t.join();

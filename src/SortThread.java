@@ -3,7 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SortThread extends Thread {
     public int[] input;
-    static Integer maxThreadCount;
+    static AtomicInteger maxThreadCount;
 
     public SortThread(int[] input) {
         this.input = input;
@@ -11,7 +11,7 @@ public class SortThread extends Thread {
 
     public SortThread(int[] input, int threadCount) {
         this.input = input;
-        maxThreadCount = threadCount;
+        maxThreadCount = new AtomicInteger(threadCount);
     }
 
     @Override
@@ -43,16 +43,7 @@ public class SortThread extends Thread {
             }
         }
 
-        boolean ok = false;
-        if (maxThreadCount > 0) {
-            synchronized (SortThread.class) {
-                if (maxThreadCount > 0) {
-                    ok = true;
-                    maxThreadCount--;
-                }
-            }
-        }
-        if (ok) {
+        if (maxThreadCount.decrementAndGet() > 0) {
             var t = new SortThread(less);
             t.start();
             sort(greater, greaterI);
@@ -65,34 +56,14 @@ public class SortThread extends Thread {
     }
 
     private void merge(int[] less, int lessSize, int[] equals, int equalsSize, int[] greater, int greaterSize, int[] result) throws InterruptedException {
-        boolean ok = false;
-        Thread t = new Thread(() -> {
-            for (int i = 0; i < lessSize; ++i) {
-                result[i] = less[i];
-            }
-        });
-        if (maxThreadCount > 0) {
-            synchronized (SortThread.class) {
-                if (maxThreadCount > 0) {
-                    ok = true;
-                    maxThreadCount--;
-                }
-            }
+        for (int i = 0; i < lessSize; ++i) {
+            result[i] = less[i];
         }
-        if (ok) {
-            t.start();
-        } else {
-            for (int i = 0; i < lessSize; ++i) {
-                result[i] = less[i];
-            }
-        }
-
         for (int i = 0; i < equalsSize; ++i) {
             result[lessSize + i] = equals[i];
         }
         for (int i = 0; i < greaterSize; ++i) {
             result[lessSize + equalsSize + i] = greater[i];
         }
-        t.join();
     }
 }
