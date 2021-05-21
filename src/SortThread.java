@@ -2,6 +2,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.arraycopy;
+import static java.lang.System.out;
 
 public class SortThread extends Thread {
     public int[] input;
@@ -52,7 +53,8 @@ public class SortThread extends Thread {
             }
         }
 
-        if (maxThreadCount.decrementAndGet() > 0) {
+        if (size > 100_000 && maxThreadCount.get() > 1 && maxThreadCount.decrementAndGet() > 0) {
+            out.println(lessI + " " + equalsI + " " + greaterI);
             var t = new SortThread(less, lessI, input, 0);
             t.start();
             sort(greater, greaterI);
@@ -64,6 +66,7 @@ public class SortThread extends Thread {
                 input[lessI + equalsI + i] = greater[i];
             }
             t.join();
+            maxThreadCount.incrementAndGet();
         } else {
             sort(less, lessI);
             sort(greater, greaterI);
@@ -74,12 +77,16 @@ public class SortThread extends Thread {
         if (result != null) {
             arraycopy(input, 0, result, resultStartIndex, size);
         }
-
     }
 
     private void merge(int[] less, int lessSize, int[] equals, int equalsSize, int[] greater, int greaterSize, int[] result) throws InterruptedException {
         if (lessSize >= 0) arraycopy(less, 0, result, 0, lessSize);
         if (equalsSize >= 0) arraycopy(equals, 0, result, lessSize, equalsSize);
         if (greaterSize >= 0) arraycopy(greater, 0, result, lessSize + equalsSize, greaterSize);
+    }
+
+    private void merge(int[] equals, int equalsSize, int[] greater, int greaterSize, int[] result, int start) throws InterruptedException {
+        if (equalsSize >= 0) arraycopy(equals, 0, result, start, equalsSize);
+        if (greaterSize >= 0) arraycopy(greater, 0, result, start + equalsSize, greaterSize);
     }
 }
