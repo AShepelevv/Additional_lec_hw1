@@ -29,16 +29,6 @@ public class Main {
 
         System.out.println((nanoTime() - startTime) / 1e9);
 
-//        for (int i : arrCopy) {
-//            System.out.print(i + " ");
-//        }
-//        System.out.println();
-//
-//        for (int i : arr) {
-//            System.out.print(i + " ");
-//        }
-//        System.out.println();
-
         boolean ok = true;
         for (int i = 1; i < SIZE; ++i) {
             if (arrCopy[i] != arr[i]) {
