@@ -1,23 +1,32 @@
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.System.arraycopy;
+
 public class SortThread extends Thread {
     public int[] input;
+    public int size;
+    public int[] result;
+    public int resultStartIndex;
     static AtomicInteger maxThreadCount;
 
-    public SortThread(int[] input) {
+    public SortThread(int[] input, int size, int[] result, int resultStartIndex) {
         this.input = input;
+        this.size = size;
+        this.result = result;
+        this.resultStartIndex = resultStartIndex;
     }
 
-    public SortThread(int[] input, int threadCount) {
+    public SortThread(int[] input, int size, int threadCount) {
         this.input = input;
+        this.size = size;
         maxThreadCount = new AtomicInteger(threadCount);
     }
 
     @Override
     public void run() {
         try {
-            sort(input, input.length);
+            sort(input, size);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -44,26 +53,33 @@ public class SortThread extends Thread {
         }
 
         if (maxThreadCount.decrementAndGet() > 0) {
-            var t = new SortThread(less);
+            var t = new SortThread(less, lessI, input, 0);
             t.start();
             sort(greater, greaterI);
+            // Многопоточный merge (less вставляет другой поток)
+            for (int i = 0; i < equalsI; ++i) {
+                input[lessI + i] = equals[i];
+            }
+            for (int i = 0; i < greaterI; ++i) {
+                input[lessI + equalsI + i] = greater[i];
+            }
             t.join();
         } else {
             sort(less, lessI);
             sort(greater, greaterI);
+            // Однопоточный merge
+            merge(less, lessI, equals, equalsI, greater, greaterI, input);
         }
-        merge(less, lessI, equals, equalsI, greater, greaterI, input);
+        // merge в родительский поток
+        if (result != null) {
+            arraycopy(input, 0, result, resultStartIndex, size);
+        }
+
     }
 
     private void merge(int[] less, int lessSize, int[] equals, int equalsSize, int[] greater, int greaterSize, int[] result) throws InterruptedException {
-        for (int i = 0; i < lessSize; ++i) {
-            result[i] = less[i];
-        }
-        for (int i = 0; i < equalsSize; ++i) {
-            result[lessSize + i] = equals[i];
-        }
-        for (int i = 0; i < greaterSize; ++i) {
-            result[lessSize + equalsSize + i] = greater[i];
-        }
+        if (lessSize >= 0) arraycopy(less, 0, result, 0, lessSize);
+        if (equalsSize >= 0) arraycopy(equals, 0, result, lessSize, equalsSize);
+        if (greaterSize >= 0) arraycopy(greater, 0, result, lessSize + equalsSize, greaterSize);
     }
 }

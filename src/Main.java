@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import static java.lang.Integer.parseInt;
+import static java.lang.System.arraycopy;
 import static java.lang.System.nanoTime;
+import static java.util.Arrays.sort;
 
 public class Main {
     static int SIZE = 10_000_000;
@@ -16,18 +18,24 @@ public class Main {
             arr[i] = parseInt(reader.readLine());
         }
 
-        SortThread t = new SortThread(arr, 4);
+        int[] arrCopy = new int[SIZE];
+        arraycopy(arr, 0, arrCopy, 0, SIZE);
+        sort(arrCopy);
+
+        SortThread t = new SortThread(arr, arr.length, 1);
         var startTime = nanoTime();
         t.start();
         t.join();
+
         System.out.println((nanoTime() - startTime) / 1e9);
+
         boolean ok = true;
-        for (int i = 1; i< SIZE; ++i) {
-            if (arr[i - 1] > arr[i]) {
+        for (int i = 1; i < SIZE; ++i) {
+            if (arrCopy[i] != arr[i]) {
                 ok = false;
                 break;
             }
         }
-        System.out.println(ok ? "CORRECT" : "INCORRECT");
+        System.out.println("\n" + (ok ? "CORRECT" : "INCORRECT"));
     }
 }
